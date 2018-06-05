@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 
 const logic = async () => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.goto('https://sfbay.craigslist.org/search/fbh');
 
