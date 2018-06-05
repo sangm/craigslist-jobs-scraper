@@ -6,4 +6,4 @@ Install dependencies with
 
 Run the script with 
 
-> `yarn scrape`
+> `yarn scrape https://sfbay.craigslist.org/search/fbh?s=120 page2.txt`

@@ -1,9 +1,13 @@
 import puppeteer from 'puppeteer';
+import fs from 'fs';
+
+const craigslistPage = process.argv[2];
+const filename = process.argv[3];
 
 const logic = async () => {
   const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
-  await page.goto('https://sfbay.craigslist.org/search/fbh');
+  await page.goto(craigslistPage);
 
   const urls: [string] = await page.evaluate(() => {
     return [...document.querySelectorAll('.result-row > a')].map(anchor => {
@@ -36,7 +40,6 @@ const logic = async () => {
         return '';
       });
 
-      console.log(description);
       await page.close();
       return Promise.resolve(description);
     } catch (e) {
@@ -46,6 +49,7 @@ const logic = async () => {
   });
 
   Promise.all(descriptions).then(result => {
+    fs.writeFileSync(filename, result.join('\n'));
     browser.close();
   });
 };
