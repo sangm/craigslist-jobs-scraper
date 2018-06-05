@@ -5,7 +5,7 @@
   "author": "Sang Mercado <sang.mercado@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "run": "ts-node scrape.ts"
+    "scrape": "ts-node scrape.ts"
   },
   "devDependencies": {
     "@types/node": "^10.3.1",
