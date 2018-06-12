@@ -28,8 +28,16 @@ const scrapePage = async (craigslistPage: string, filename: string) => {
 
       await page.goto(url, {
         waitUntil: 'networkidle0',
-        timeout: 240000,
+        timeout: 800000,
       });
+
+      const header = await page.evaluate(() => {
+        const element: HTMLElement | null = document.querySelector('#titletextonly');
+        if (element) {
+          return element.innerText;
+        }
+        return '';
+      })
 
       const description = await page.evaluate(() => {
         const element: HTMLElement | null = document.querySelector(
@@ -43,7 +51,7 @@ const scrapePage = async (craigslistPage: string, filename: string) => {
       });
 
       await page.close();
-      return Promise.resolve(description);
+      return Promise.resolve(`${header}\n\n${description}`);
     } catch (e) {
       console.error(e);
       return Promise.resolve('');
