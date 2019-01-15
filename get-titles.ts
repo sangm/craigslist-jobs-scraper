@@ -37,11 +37,16 @@ const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelect
   // page.on('console', consoleObj => console.log(consoleObj.text()));
 
   await page.goto(url);
+  await page.waitForSelector(nextButtonSelector);
 
   let nextButtonExists: boolean = await page.$(nextButtonSelector) != null;
   let titles: Array<ScrapedData> = await extractTitles(page, titleSelector);
   let count = 0;
   let previousUrl: string = '';
+
+  if (!nextButtonExists) {
+    console.log('Next button was not found!');
+  }
 
   while (nextButtonExists) {
     try {
