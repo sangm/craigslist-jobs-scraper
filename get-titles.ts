@@ -41,36 +41,36 @@ const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelect
 
   let nextButtonExists: boolean = await page.$(nextButtonSelector) != null;
   let titles: Array<ScrapedData> = await extractTitles(page, titleSelector);
-  let count = 0;
   let previousUrl: string = '';
 
   if (!nextButtonExists) {
     console.log('Next button was not found!');
   }
 
-  while (nextButtonExists) {
+  while (true) {
     try {
-      await page.click(nextButtonSelector);
       if (previousUrl === page.url()) {
-        console.log('same page again');
+        console.log('Exiting due to the same page again', previousUrl);
         break;
       }
       previousUrl = page.url();
-      count += 1;
+      console.log(`Scraping ${page.url()}`);
+
+      await page.waitForSelector(nextButtonSelector, { timeout: 15000 });
       titles = titles.concat(await extractTitles(page, titleSelector));
-      nextButtonExists = await page.$(nextButtonSelector) != null;
-      console.log(`Going to page: ${count} after 1.2s`);
-      await sleep(1200);
-    } catch (err) {
-      console.log('Some error happpened, exiting gracefully', err);
+      await page.click(nextButtonSelector);
+    } catch(err) {
+      console.log('Error happened. Exiting gracefully: ', err);
       break;
     }
   }
 
   const uniqueTitles = generateUniqueTitles(titles);
-  uniqueTitles.forEach(title => {
-    console.log(`${title.text}\t${title.link}`);
-  })
+  uniqueTitles
+    .sort((a, b) => a.text <= b.text ? -1 : 1)
+    .forEach(title => {
+      console.log(`${title.text}\t${title.link}`);
+    })
   browser.close();
 }
 
