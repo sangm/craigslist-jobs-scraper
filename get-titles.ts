@@ -45,7 +45,7 @@ const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelect
   let ajaxRequestUrl: string = '';
 
   page.on('request', request => {
-    if (request.url().includes(nextPageRequest)) {
+    if (nextPageRequest !== '' && request.url().includes(nextPageRequest)) {
       ajaxRequestUrl = request.url();
     }
 
@@ -74,7 +74,7 @@ const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelect
       titles = titles.concat(await extractTitles(page, titleSelector));
       await page.click(nextButtonSelector);
 
-      if (previousAjaxRequestUrl === ajaxRequestUrl) {
+      if (nextPageRequest && previousAjaxRequestUrl === ajaxRequestUrl) {
         console.log('End of page', ajaxRequestUrl);
         break;
       }
@@ -103,5 +103,7 @@ const titleSelector = process.argv[3];
 const nextButtonSelector = process.argv[4];
 const nextPageRequest = process.argv[5];
 const sleepTime: string = process.argv[6];
+
+console.log(url, titleSelector, nextButtonSelector, nextPageRequest, sleepTime)
 
 scrapeTitles(url, titleSelector, nextButtonSelector, nextPageRequest || '', parseInt(sleepTime) || undefined);
