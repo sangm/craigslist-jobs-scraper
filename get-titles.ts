@@ -27,6 +27,21 @@ const generateUniqueTitles = (titles: Array<ScrapedData>): Array<ScrapedData> =>
   return result;
 }
 
+interface FakeRequest {
+  url(): string
+}
+
+const determineRequest =
+  (a: puppeteer.Request | FakeRequest): a is puppeteer.Request => (a as puppeteer.Request).postData !== undefined;
+
+const isEqualRequest = (a: puppeteer.Request | FakeRequest, b: puppeteer.Request | FakeRequest) => {
+  if (determineRequest(a) && determineRequest(b)) {
+    return a.postData() === b.postData() && a.url() === b.url();
+  }
+
+  return a.url() === b.url();
+};
+
 const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelector: string, nextPageRequest: string, sleepTime?: number) => {
   const browser = await puppeteer.launch({
     headless: false,
@@ -41,12 +56,12 @@ const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelect
 
   let titles: Array<ScrapedData> = await extractTitles(page, titleSelector);
   let previousUrl: string = '';
-  let previousAjaxRequestUrl: string = '';
-  let ajaxRequestUrl: string = '';
+  let previousAjaxRequest: puppeteer.Request | FakeRequest = { url: () => '' };
+  let ajaxRequest: puppeteer.Request | FakeRequest = { url: () => '' };
 
   page.on('request', request => {
     if (nextPageRequest !== '' && request.url().includes(nextPageRequest)) {
-      ajaxRequestUrl = request.url();
+      ajaxRequest = request;
     }
 
     request.continue();
@@ -63,7 +78,7 @@ const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelect
       previousUrl = pageUrl;
 
       if (nextPageRequest) {
-        console.log(`Scraping ${ajaxRequestUrl}`);
+        console.log(`Scraping ${ajaxRequest.url()}`);
       } else {
         console.log(`Scraping ${pageUrl}`);
       }
@@ -74,12 +89,12 @@ const scrapeTitles = async (url: string, titleSelector: string, nextButtonSelect
       titles = titles.concat(await extractTitles(page, titleSelector));
       await page.click(nextButtonSelector);
 
-      if (nextPageRequest && previousAjaxRequestUrl === ajaxRequestUrl) {
-        console.log('End of page', ajaxRequestUrl);
+      if (nextPageRequest && isEqualRequest(previousAjaxRequest, ajaxRequest)) {
+        console.log('End of page', ajaxRequest.url());
         break;
       }
 
-      previousAjaxRequestUrl = ajaxRequestUrl;
+      previousAjaxRequest = ajaxRequest;
       if (sleepTime) {
         await sleep(sleepTime * 1000);
       }
